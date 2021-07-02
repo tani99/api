@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/c44adee4-0f31-470a-9229-34d589c45434/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/summarisation-api-project",
+    "appService.deploySubpath": "."
+}
