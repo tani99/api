@@ -1,0 +1,61 @@
+<!-- {% extends "bootstrap/base.html" %} -->
+
+<head>
+    {% block head %}
+        {#        {% block title %}This is an example page{% endblock %}#}
+        {% block styles %}
+            {{ super() }}
+            <link rel="stylesheet"
+                  href="{{ url_for('static', filename='css/styles.css') }}">
+        {% endblock %}
+
+        {% block navbar %}
+            <div class="navbar navbar-fixed-top">
+                {#    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">#}
+                {{ nav.mynavbar.render() }}
+                {#    </nav>#}
+            </div>
+        {% endblock %}
+    {% endblock %}
+</head>
+
+<body>
+
+{% block content %}
+
+    <main role="main" class="container">
+
+        <div class="starter-template">
+            <h1>Welcome to our NLP note generator</h1>
+            <p class="lead">Please paste your text in the box and generate your summarised notes!</p>
+
+            <div class="container-fluid">
+
+                <div class="row">
+                    <form action="/summarise" method="post">
+                        <div class="col" style="background-color:lavender;">
+                            <div class="form-group">
+                                <label for="exampleFormControlTextarea1">Enter Text</label>
+                                <input id="text" type="text" name="text" class="form-control" rows="3" placeholder=""/>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">Summarise</button>
+                        </div>
+                    </form>
+                    <br>
+                    <div class="col" style="background-color:lavenderblush;">
+                        <div class="form-group">
+                            <label for="exampleFormControlTextarea1">Summary</label>
+                            <p id="summary">{{ summary }}</p>
+                            {#                            <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>#}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main><!-- /.container -->
+
+{% endblock %}
+</body>
