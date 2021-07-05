@@ -2,6 +2,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/venv,python,flask,node
 # Edit at https://www.toptal.com/developers/gitignore?templates=venv,python,flask,node
 
+.idea/
+
 ### Flask ###
 instance/*
 !instance/.gitignore
