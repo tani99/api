@@ -1,4 +1,4 @@
-from muss.simplify import simplify_sentences
+from muss.muss.simplify import simplify_sentences
 from nltk.tokenize import sent_tokenize
 
 def simplify_muss(extracted):
