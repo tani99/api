@@ -15,7 +15,7 @@ def index():
 @app.route('/hello')
 def hello():
     json_file = {}
-    json_file['query'] = 'hellow'
+    json_file['query'] = 'lello lello'
     return jsonify(json_file)
 
 @app.route('/world')
