@@ -1,10 +1,10 @@
-# from simplification.edmundson import edmundsons
-# from simplification.muss_simp import simplify_muss
-# from simplification.control_simp import controllable_simplification
+from simplification.edmundson import edmundsons
+from simplification.muss_simp import simplify_muss
+from simplification.control_simp import controllable_simplification
 
-from edmundson import edmundsons
-from muss_simp import simplify_muss
-from control_simp import controllable_simplification
+# from edmundson import edmundsons
+# from muss_simp import simplify_muss
+# from control_simp import controllable_simplification
 
 from multiprocessing import Process, freeze_support
 
