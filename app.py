@@ -43,4 +43,7 @@ def summarise(text):
     return jsonify(json_file)
 
 def getSummary(text):
-    return summarise_text(text)
+    return summarise_text(text, simplifier="muss")
+
+def getSummaryTest(text):
+    return "TEST: " + text
