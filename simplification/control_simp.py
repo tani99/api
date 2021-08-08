@@ -1,4 +1,3 @@
-
 import argparse
 import math
 
@@ -17,10 +16,11 @@ import os
 from nltk.tokenize import sent_tokenize
 import torch
 
+
 def controllable_simp(input):
     # Remove all new line characters
     print("INPUT", input)
-    text = input.replace("\n"," ")
+    text = input.replace("\n", " ")
     print("TEXT ADTER NEWLINES", text)
     # text = input
     f = open("input.txt", "w")
@@ -30,11 +30,13 @@ def controllable_simp(input):
 
     print("First")
 
-    args = argparse.Namespace(input='input.txt', output='candidates.txt')
-    generate_candidates(args)
+    # args = argparse.Namespace(input='input.txt', output='candidates.txt')
+    # generate_candidates(args)
 
     print("generated")
-    args = argparse.Namespace(model='controllable_simplification/ranking/model.bin', input='input.txt',
+    print(os.getcwd())
+
+    args = argparse.Namespace(model='../../controllable_simplification/ranking/model.bin', input='input.txt',
                               candidates='candidates.txt', output='output.txt')
     rank(args)
     print("simplified")

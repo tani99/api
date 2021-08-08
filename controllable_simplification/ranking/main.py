@@ -1,7 +1,10 @@
 import torch
 import argparse
-# from models import mr_ranker
 from controllable_simplification.ranking.features.feature_extractor import FeatureExtractor
+import os
+import sys
+
+sys.path.insert(0, '../../controllable_simplification/ranking')
 
 
 def rerank(segs, segs_feats, model):
@@ -16,7 +19,7 @@ def main(args):
 
     feature_extractor = FeatureExtractor()
     test_feats, test_cands, test_src = feature_extractor.get_features(args.input, args.candidates)
-
+    print(os.getcwd())
     model = torch.load(args.model)
     model.model.eval()
 

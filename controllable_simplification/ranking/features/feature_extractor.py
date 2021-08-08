@@ -3,7 +3,7 @@ import random
 import numpy as np
 from collections import Counter
 
-
+import os
 def jaccard_similarity(list1, list2):
     intersection = len(list(set(list1).intersection(list2)))
     union = (len(list1) + len(list2)) - intersection
@@ -17,7 +17,8 @@ def compression_ratio(comp, simp):
 class FeatureExtractor:
     def __init__(self):
         self.rule_vocab = {}
-        for ind, line in enumerate(open("controllable_simplification/ranking/all_rules.txt")):
+        print(os.getcwd())
+        for ind, line in enumerate(open("../../controllable_simplification/ranking/all_rules.txt")):
             self.rule_vocab[line.strip()] = ind
 
     def get_fv(self, cand, src):

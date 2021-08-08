@@ -1,8 +1,9 @@
+from final_files.summarisation.edmundsons.run_edmundsons import Edmundsons
+from final_files.util import sentence_tokenizer
 from simplification.summariser import summarise_text
-from flask import Flask, jsonify, render_template, request, redirect
-from werkzeug.utils import secure_filename
-from flask_bootstrap import Bootstrap
-import asyncio
+from flask import Flask, jsonify, render_template
+
+from tables.tables import k_means_cluster
 
 app = Flask(__name__, template_folder='templates')
 
@@ -36,14 +37,36 @@ def world():
 
 @app.route('/summarise/<text>', methods=['GET', 'POST'])
 def summarise(text):
+    # ALL
+    sentences_count = int(0.8*len(sentence_tokenizer(text)))
+    summariser = Edmundsons(text, sentences_count, cue_weight=1.0, key_weight=1.0,
+                            title_weight=1.0, length_weight=1.0)
+    summary = summariser.summarise()
+
     print("got text: ", text)
     json_file = {}
-    json_file['summary'] = getSummary(text)
+    json_file['summary'] = summary
+        # getSummary(text)
     print(json_file)
     return jsonify(json_file)
+
+
 
 def getSummary(text):
     return summarise_text(text, simplifier="muss")
 
 def getSummaryTest(text):
     return "TEST: " + text
+
+
+@app.route('/tabulate/<text1>/<text2>', methods=['GET', 'POST'])
+def tabulate(text1, text2):
+    print("got text: ", text1, text2)
+    tabulated = k_means_cluster(text1, text2)
+    # json = tabulated.to_json()
+    return tabulated
+    # print(json)
+    # json_file = {}
+    # json_file['summary'] = getSummary(text)
+    # print(json_file)
+    # return jsonify(json_file)

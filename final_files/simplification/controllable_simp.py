@@ -8,18 +8,16 @@ from final_files.util import sentence_tokenizer
 
 def controllable_simp(input):
     text = " ".join(sentence_tokenizer(input))
-    f = open("input.txt", "w")
+    f = open("../../controllable_simplification/DiscourseSimplification/input.txt", "w")
     f.truncate(0)
     f.write(text)
     f.close()
 
-    print("First")
-
-    args = argparse.Namespace(input='input.txt', output='candidates.txt')
+    args = argparse.Namespace(input="../../controllable_simplification/DiscourseSimplification/input.txt", output='candidates.txt')
     generate_candidates(args)
 
     print("generated")
-    args = argparse.Namespace(model='controllable_simplification/ranking/model.bin', input='input.txt',
+    args = argparse.Namespace(model='../../controllable_simplification/ranking/model.bin', input="../../controllable_simplification/DiscourseSimplification/input.txt",
                               candidates='candidates.txt', output='output.txt')
     rank(args)
     print("simplified")
