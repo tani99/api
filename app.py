@@ -1,5 +1,6 @@
 from final_files.summarisation.edmundsons.run_edmundsons import Edmundsons
 from final_files.util import sentence_tokenizer
+from final_files.visualisation.weakest_link_method import tabulate_text
 from simplification.summariser import summarise_text
 from flask import Flask, jsonify, render_template
 
@@ -59,12 +60,16 @@ def getSummaryTest(text):
     return "TEST: " + text
 
 
-@app.route('/tabulate/<text1>/<text2>', methods=['GET', 'POST'])
-def tabulate(text1, text2):
+@app.route('/tabulate/<text1>/<text2>/<n>', methods=['GET', 'POST'])
+def tabulate(text1, text2, n):
     print("got text: ", text1, text2)
-    tabulated = k_means_cluster(text1, text2)
+    # tabulated = k_means_cluster(text1, text2)
+    s1, s2, table = tabulate_text(text1, text2, int(n))
+
     # json = tabulated.to_json()
-    return tabulated
+    print("DONE!")
+    print(table.transpose().to_json())
+    return table.transpose().to_json()
     # print(json)
     # json_file = {}
     # json_file['summary'] = getSummary(text)

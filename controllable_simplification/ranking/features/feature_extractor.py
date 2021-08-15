@@ -56,6 +56,9 @@ class FeatureExtractor:
         print("Extracting features")
         all_src, all_features, all_cands = [], [], []
         for src, candidates in zip(open(input_file), open(cands_file)):
+            print("BLABLA")
+            print(src)
+            print("BLABLA")
 
             src = src.strip()
             cands = candidates.strip().split("\t")

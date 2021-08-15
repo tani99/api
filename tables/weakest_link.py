@@ -3,7 +3,7 @@ import math
 from nltk import sent_tokenize
 
 from tables import get_embeddings, spacy
-from util import cosine_distance
+# from util import cosine_distance
 
 
 def distance(sent1, sent2):

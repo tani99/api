@@ -35,6 +35,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.io.FileNotFoundException;
+
 public class App {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(App.class);
     private static final DiscourseSimplifier DISCOURSE_SIMPLIFIER = new DiscourseSimplifier();
@@ -50,8 +54,28 @@ public class App {
         }
     }
 
+    public static List<String> get_sentences_list_from_file(File file){
+        System.out.println("Getting list of sentences");
+        List<String> sentences = new ArrayList<String>();
+        Scanner fileScanner = null;
+        try {
+            fileScanner = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        while (fileScanner.hasNextLine()) {
+            // Some additional code for storing the output to an array around here? :]
+            String nextLine = fileScanner.nextLine();
+            System.out.println(nextLine);
+            sentences.add(nextLine);
+        }
+
+        System.out.print(sentences.size());
+        System.out.println(sentences);
+        return sentences;
+    }
     public static void main(String[] args) throws IOException {
-        SimplificationContent content = DISCOURSE_SIMPLIFIER.doDiscourseSimplification(new File("input.txt"), ProcessingType.SEPARATE, true);
+        SimplificationContent content = DISCOURSE_SIMPLIFIER.doDiscourseSimplification(get_sentences_list_from_file(new File("input.txt")), ProcessingType.SEPARATE);
         content.serializeToJSON(new File("output.json"));
         saveLines(new File("output_default.txt"), Arrays.asList(content.defaultFormat(false)));
         saveLines(new File("output_flat.txt"), Arrays.asList(content.flatFormat(false)));

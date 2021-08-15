@@ -11,10 +11,17 @@ def main(args):
     cwd = os.getcwd()
     print(cwd)
     # Runs DisSim to generate candidates
+    print("POINT 1")
     os.system("cp " + args.input + f" {discourse_simplification_directory}/input.txt")
+    print("POINT 2")
     os.chdir(f'{discourse_simplification_directory}')
+    print("POINT 3")
     os.system("mvn clean compile exec:java")
+    print("POINT 4")
     os.chdir(cwd)
+    print("THIS POINT")
+    print("input testing ", args.input)
+
     dissim_candidates = dissim.generate_candidates(args.input, f"{discourse_simplification_directory}/output_dt.txt")
 
     # TODO: add neural splitter candidates.

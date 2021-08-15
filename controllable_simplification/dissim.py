@@ -50,11 +50,18 @@ def build_tree(lines):
 
         new_node = Node(sentence, level, tree_string, rules)
         if level == 0:
+            print("level 0")
             queues[level].append(new_node)
         else:
+            print("level jore than 0")
             queues[level].append(new_node)
             queues[level - 1][-1].children.append(new_node)
 
+    print(queues)
+    print(len(queues))
+    print(len(queues[0]))
+    # if len(queues[0]) > 0:
+    #     return queues[0][0]
     return queues[0][0]
 
 
@@ -104,6 +111,7 @@ def get_max_sim(cand):
 
 
 def filter_candidates(src, candidates):
+    print("SRC TEST: ", src)
     new_candidates = set()
     for cand in candidates:
         cand_sents, cand_rules = cand
@@ -126,8 +134,16 @@ def generate_candidates(input_file, tree_file):
     all_candidates = []
     for src in open(input_file):
         src = src.strip()
+        if src == "":
+            print("BLANK")
+            continue
+        print("TESTING THINGS ", "|" + src + "|")
+
         index, tree_sents = next_tree(tree_lines, index)
 
+        if len(tree_sents) == 0:
+            continue
+        print("TREE SENTS: ", tree_sents)
         tree = build_tree(tree_sents)
         get_all_candidates(tree)
         candidates = filter_candidates(src, tree.cands)
