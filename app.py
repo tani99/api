@@ -59,6 +59,10 @@ def getSummary(text):
 def getSummaryTest(text):
     return "TEST: " + text
 
+@app.route('/keywords/<text>', methods=['GET', 'POST'])
+def keywords(text):
+    return None
+    # return get_keywords(text)
 
 @app.route('/tabulate/<text1>/<text2>/<n>', methods=['GET', 'POST'])
 def tabulate(text1, text2, n):

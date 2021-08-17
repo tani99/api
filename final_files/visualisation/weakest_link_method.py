@@ -5,6 +5,7 @@ from multiprocessing.dummy import freeze_support
 
 from nltk import sent_tokenize
 
+from final_files.simplification.muss_simp.muss_simplification import simplify_muss
 from final_files.summarisation.evaluate_edmundsons import rouge_score
 from final_files.util import sentence_tokenizer
 from final_files.visualisation.embeddings import get_embeddings, spacy
@@ -130,10 +131,10 @@ def match_clusters_dataframe(clusters1, clusters2):
         sim, match = get_matching_cluster(cluster, clusters2)
         clusters2.remove(match)
         # Simplify clusters
-        # string1_simplified = summarise_text(string1, simplifier='muss', percentage=1)
-        # string2_simplified = summarise_text(string2, simplifier='muss', percentage=1)
+        string1_simplified = simplify_muss(cluster)
+        string2_simplified = simplify_muss(match)
         # matches = matches.append({'Text1': string1_simplified, 'Text2': string2_simplified}, ignore_index=True)
-        matches = matches.append({'Text1': cluster, 'Text2': match}, ignore_index=True)
+        matches = matches.append({'Text1': string1_simplified, 'Text2': string2_simplified}, ignore_index=True)
 
     return matches
 
