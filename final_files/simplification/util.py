@@ -23,7 +23,7 @@ def groups_of_n(n, sentences):
         if i == 0:
             grouped_text += sentences[i].strip()
             grouped_text += " "
-        elif i % 3 == 0:
+        elif i % n == 0:
             grouped_text += "\n"
             grouped_text += sentences[i].strip()
         else:

@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from controllable_simplification.generate_candidates import main as generate_candidates
 from controllable_simplification.ranking.main import main as rank
@@ -12,6 +13,7 @@ def controllable_simp(input, directory="../../../controllable_simplification", n
     text = groups_of_n(n, sentence_tokenizer(input))
     print(text)
 
+    print(os.getcwd())
     f = open(f"{directory}/DiscourseSimplification/input.txt", "w")
     f.truncate(0)
     f.write(text)

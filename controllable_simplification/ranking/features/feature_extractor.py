@@ -18,7 +18,7 @@ class FeatureExtractor:
     def __init__(self):
         self.rule_vocab = {}
         print(os.getcwd())
-        for ind, line in enumerate(open("../../controllable_simplification/ranking/all_rules.txt")):
+        for ind, line in enumerate(open("../../../controllable_simplification/ranking/all_rules.txt")):
             self.rule_vocab[line.strip()] = ind
 
     def get_fv(self, cand, src):

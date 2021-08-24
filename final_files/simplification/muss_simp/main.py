@@ -1,6 +1,8 @@
+# from multiprocessing.dummy import freeze_support
+import multiprocessing
 from multiprocessing.dummy import freeze_support
 
-from final_files.simplification.muss_simp.muss_simplification import simplify_muss
+from final_files.simplification.muss_simp.muss_simplification import simplify_muss, simplify_muss_multi
 from final_files.simplification.util import pre_process_text
 from final_files.util import sentence_tokenizer
 import pandas as pd
@@ -90,6 +92,19 @@ def time_test():
 
 if __name__ == '__main__':
     freeze_support()
+    text = "It can be dissolved earlier than its term by the President on the advice of the Prime Minister. It can be voted out of power by a debate and vote on a no-confidence motion. During the 13\" Lok Sabha, Bhartiya Janata Party lost a no~confidence motion by one vote and had to resign.  The House may have not more than 552 members; 530 elected from the states, 20 from Union Territories and not more than 2 members nominated from the Anglo-Indian Community. At present, the strength of the Lok Sabha is 545.  Election to the Lok Sabha is by universal adult franchise. Every Indian citizen above the age of 18 can vote for his/her representative in the Lok Sabha. The election is direct but by secret ballot, so that nobody is threatened or coerced into voting for a particular party or an individual. The Election Commission, an autonomous body elected by the President of India, organises, manages and oversees the entire process of election. What\'s More The provision for the Anglo-Indian community was included at the behest of the British Government to protect their nationals who had decided to stay back."
+    # start = time.time()
+    # print("FINAL 1: ", simplify_muss_multi(text, 2))
+    # end = time.time()
+    # print("Time 1: ", end-start)
+
+    start = time.time()
+    print("FINAL 2: ", simplify_muss(text, 2))
+    print(multiprocessing.cpu_count())
+    end = time.time()
+    print("Time 2: ", end - start)
+
+
     # example = """The Lok Sabha is elected for a term of five years. Its life can be extended for one year at a time during a national emergency. It can be dissolved earlier than its term by the President on the advice of the Prime Minister. It can be voted out of power by a debate and vote on a no-confidence motion. During the 13" Lok Sabha, Bhartiya Janata Party lost a no~confidence motion by one vote and had to resign.  The House may have not more than 552 members; 530 elected from the states, 20 from Union Territories and not more than 2 members nominated from the Anglo-Indian Community. At present, the strength of the Lok Sabha is 545.  Election to the Lok Sabha is by universal adult franchise. Every Indian citizen above the age of 18 can vote for his/her representative in the Lok Sabha. The election is direct but by secret ballot, so that nobody is threatened or coerced into voting for a particular party or an individual. The Election Commission, an autonomous body elected by the President of India, organises, manages and oversees the entire process of election. What's More The provision for the Anglo-Indian community was included at the behest of the British Government to protect their nationals who had decided to stay back."""
     #
     # print("--------Original--------")
@@ -123,7 +138,7 @@ if __name__ == '__main__':
     # print(df)
     # df.to_csv("time_test.csv")
 
-    time_test()
+    # time_test()
     # run_and_get_time(example, 2)
     # run_and_get_time(example, 3)
     # run_and_get_time(example, 4)

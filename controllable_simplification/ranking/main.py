@@ -4,7 +4,7 @@ from controllable_simplification.ranking.features.feature_extractor import Featu
 import os
 import sys
 
-sys.path.insert(0, '../../controllable_simplification/ranking')
+sys.path.insert(0, '../../../controllable_simplification/ranking')
 
 
 def rerank(segs, segs_feats, model):

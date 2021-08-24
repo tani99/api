@@ -6,7 +6,7 @@ from controllable_simplification import dissim
 import sys
 sys.path.insert(0, '../controllable_simplification/ranking')
 
-discourse_simplification_directory = '../../controllable_simplification/DiscourseSimplification'
+discourse_simplification_directory = '../../../controllable_simplification/DiscourseSimplification'
 def main(args):
     cwd = os.getcwd()
     print(cwd)
