@@ -15,7 +15,7 @@ def get_embeddings(text, embedding, d):
     return embedding(text, d)
 
 
-def spacy_embedding(text, d):
+def spacy_embedding(text, d=None):
     return nlp(text).vector
 
 
