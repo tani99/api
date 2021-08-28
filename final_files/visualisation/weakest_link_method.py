@@ -4,8 +4,11 @@ import time
 from copy import copy
 from multiprocessing.dummy import freeze_support
 import itertools
+
+import spacy
 from nltk import sent_tokenize
 
+# from app import get_keywords
 from final_files.simplification.muss_simp.muss_simplification import simplify_muss
 from final_files.summarisation.evaluate_edmundsons import rouge_score
 from final_files.util import sentence_tokenizer
@@ -13,6 +16,12 @@ from final_files.visualisation.embeddings import get_embeddings, spacy_embedding
 from final_files.visualisation.util import cosine_distance, get_cluster_similarity
 import pandas as pd
 
+from util import get_keywords
+
+nlp = spacy.load("en_core_web_sm")
+# Merge noun phrases and entities for easier analysis
+nlp.add_pipe("merge_entities")
+nlp.add_pipe("merge_noun_chunks")
 
 def distance(sent1, sent2, embedding):
     emb1 = get_embeddings(sent1, embedding, None)
@@ -21,11 +30,21 @@ def distance(sent1, sent2, embedding):
     return cosine_distance(emb1, emb2)
 
 
+def within_seg_sim(tok, embedding):
+    sim = 0
+    for i, sent_seg_1 in enumerate(tok):
+        sim += distance(tok[i], tok[min(i+1, len(tok)-1)], embedding)
+    print(sim)
+    return sim
+
 def weight(i, j):
+    print(i, ", ", j)
     mod = abs(i - j)
     if mod <= 2:
+        print(1)
         return 1
     else:
+        print(1 / (math.sqrt(mod - 1)))
         return 1 / (math.sqrt(mod - 1))
 
 
@@ -53,13 +72,17 @@ def segment_similarity(tok1, tok2, embedding):
     # return distance(tok1[len(tok1) - 1],
     #                 tok2[0],
     #                 embedding)
-
+    # num_relevant_sentences = 2
     sum_sentence_similarities = 0
     for i, sent_seg_1 in enumerate(tok1):
-        for j, sent_seg_2 in enumerate(tok2):
-            # weighted
-            sum_sentence_similarities += distance(sent_seg_1, sent_seg_2, embedding) * weight(i, j)
+        # if i < num_relevant_sentences:
+            for j, sent_seg_2 in enumerate(tok2):
+                # if j >= max(0, len(sent_seg_2) - num_relevant_sentences):
+                    # weighted
+                    sum_sentence_similarities += distance(sent_seg_1, sent_seg_2, embedding) * weight(i, j)
 
+    measure = within_seg_sim(tok1, embedding) + within_seg_sim(tok2, embedding) - sum_sentence_similarities
+    # return measure
     return sum_sentence_similarities / (len(tok1) * len(tok2))
 
 
@@ -246,14 +269,46 @@ def best_matches(cluster1, cluster2):
     max_key = list(reversed(sorted(dict.keys())))[0]
 
     matches = pd.DataFrame(index=range(0, len(dict[max_key])), columns=["Text1", "Text2"])
+    matches_json = {}
     i = 0
     for (text1, text2) in dict[max_key]:
-        matches.loc[i, "Text1"] = text1
-        matches.loc[i, "Text2"] = text2
+        matches_json[i]= {}
+        matches_json[i]["Text1"]={}
+        matches_json[i]["Text2"] = {}
+
+        matches_json[i]["Text1"]["text"] = text1
+        doc1 = nlp(text1)
+        matches_json[i]["Text1"]["words"] = [token.text for token in doc1]
+        matches_json[i]["Text1"]["keywords"] = get_keywords(doc1)
+
+        matches_json[i]["Text2"]["text"] = text2
+        doc2 = nlp(text2)
+        matches_json[i]["Text2"]["words"] = [token.text for token in doc2]
+        matches_json[i]["Text2"]["keywords"] = get_keywords(doc2)
+
+        # matches.loc[i, "Text1"] = {}
+        # matches.loc[i, "Text1"]["text"] = text1
+        # doc1 = nlp(text1)
+        # matches.loc[i, "Text1"]["words"] = [token.text for token in doc1]
+        # matches.loc[i, "Text1"]["keywords"] = get_keywords(doc1)
+        #
+        # matches.loc[i, "Text2"] = {}
+        # matches.loc[i, "Text2"]["text"] = text2
+        # doc2 = nlp(text2)
+        # matches.loc[i, "Text2"]["words"] = [token.text for token in doc2]
+        # matches.loc[i, "Text2"]["keywords"] = get_keywords(doc2)
+
         i += 1
 
-    return matches
+    return matches_json
 
+# def get_keywords(doc):
+#     keywords = []
+#     imp_ents = ["ORG", "DATE", "MONEY", "PERSON", "TIME",  "EVENT", "WORK_OF_ART", "PERCENT", "FAC", "NORP", "LAW"]
+#     for token in doc:
+#         if token.ent_type_ in imp_ents:
+#             keywords.append(token.text.lower())
+#     return keywords
 
 def tabulate_text(t1, t2, n, embedding):
     s1 = get_clusters(t1, n, embedding)
@@ -277,15 +332,21 @@ def evaluate(clusters_real, clusters_pred):
 if __name__ == '__main__':
     freeze_support()
 
-    example = "The Lok Sabha is elected for a term of five years. Its life can be extended for one year at a time during a national emergency. It can be dissolved earlier than its term by the President on the advice of the Prime Minister. It can be voted out of power by a debate and vote on a no-confidence motion. During the 13\" Lok Sabha, Bhartiya Janata Party lost a no~confidence motion by one vote and had to resign.  The House may have not more than 552 members; 530 elected from the states, 20 from Union Territories and not more than 2 members nominated from the Anglo-Indian Community. At present, the strength of the Lok Sabha is 545.  Election to the Lok Sabha is by universal adult franchise. Every Indian citizen above the age of 18 can vote for his/her representative in the Lok Sabha. The election is direct but by secret ballot, so that nobody is threatened or coerced into voting for a particular party or an indicvidual. The Election Commission, an autonomous body elected by the President of India, organises, manages and oversees the entire process of election. What's More The provision for the Anglo-Indian community was included at the behest of the British Government to protect their nationals who had decided to stay back."
-    # The Rajya Sabha is a permanent House. It cannot be dissolved. When the Lok Sabha is not in session or is dissolved, the permanent house still functions. However, each member of the Rajya Sabha enjoys a six-year term. Every two years one-third of its members retire by rotation. The total strength of the Rajya Sabha cannot be more than 250 of which 238 are elected while 12 arc nominated by the President of India. Election to the Rajya Sabha is done indirectly. The members of the state legislature elect the state representatives to the Rajya Sabha in accordance with the system of proportional representation by means of a single transferable vote. The seats in the Rajya Sabha for each state and Union Territory arc fixed on the basis of its population. A constituency is an area demarcated for the purpose of election. In other words, it is an area or locality with a certain number of people who choose a person to represent them in the Lok Sabha. Each State and Union Territory is divided into territorial constituencies.The division is not based on area but on population. Let us consider Mizoram, Rajasthan and Uttar Pradesh. Uttar Pradesh, a large state with dense population, has 80 constituencies."
-    min_size, max_size = get_seg_constraints(example, 3, 2)
-    # print(weakest_segments(example, spacy_embedding, min_size, max_size))
+    example1 = "The Lok Sabha is elected for a term of five years. Its life can be extended for one year at a time during a national emergency. It can be dissolved earlier than its term by the President on the advice of the Prime Minister. It can be voted out of power by a debate and vote on a no-confidence motion. During the 13\" Lok Sabha, Bhartiya Janata Party lost a no~confidence motion by one vote and had to resign.  The House may have not more than 552 members; 530 elected from the states, 20 from Union Territories and not more than 2 members nominated from the Anglo-Indian Community. At present, the strength of the Lok Sabha is 545.  Election to the Lok Sabha is by universal adult franchise. Every Indian citizen above the age of 18 can vote for his/her representative in the Lok Sabha. The election is direct but by secret ballot, so that nobody is threatened or coerced into voting for a particular party or an indicvidual. The Election Commission, an autonomous body elected by the President of India, organises, manages and oversees the entire process of election. What's More The provision for the Anglo-Indian community was included at the behest of the British Government to protect their nationals who had decided to stay back. "
+    # example2 = "The Rajya Sabha is a permanent House. It cannot be dissolved. When the Lok Sabha is not in session or is dissolved, the permanent house still functions. However, each member of the Rajya Sabha enjoys a six-year term. Every two years one-third of its members retire by rotation. The total strength of the Rajya Sabha cannot be more than 250 of which 238 are elected while 12 arc nominated by the President of India. Election to the Rajya Sabha is done indirectly. The members of the state legislature elect the state representatives to the Rajya Sabha in accordance with the system of proportional representation by means of a single transferable vote. The seats in the Rajya Sabha for each state and Union Territory arc fixed on the basis of its population. A constituency is an area demarcated for the purpose of election. In other words, it is an area or locality with a certain number of people who choose a person to represent them in the Lok Sabha. Each State and Union Territory is divided into territorial constituencies.The division is not based on area but on population. Let us consider Mizoram, Rajasthan and Uttar Pradesh. Uttar Pradesh, a large state with dense population, has 80 constituencies."
 
-    clusters = (get_clusters(example, 3, spacy_embedding))
+    # example2 = "The High Court, like the Supreme Court has the responsibility of protecting the Constitution of India. Therefore, it has the right to declare any law or executive order of the state null and void, if it finds that it contradicts or goes against the spirit of Constitution.The 42°* amendment to the Constitution had restricted this authority of the High Court during emergency, but with the repeal of certain sections of the amendment, the powers have been reinstated.It protects the rights of each citizen of the country and sees to it that these rights are not eroded or diluted through misinterpretation or infringement. It does so by issuing writs to the offending parties.The High Courts are there to provide advice to all government agencies and the Governor to resolve problems that they might face regarding constitutional matters.The High Court is responsible for the administration of all courts in the state within its jurisdiction and itself. It has to a see that justice is available to all. Ihe High Court has the | right to frame laws and regulations for Subordinate Courts wp and Tribunal except for Military Tribunals."
+    # min_size, max_size = get_seg_constraints(example, 3, 2)
+    # # print(weakest_segments(example, spacy_embedding, min_size, max_size))
+    #
+    clusters = (get_clusters(example1, 3, spacy_embedding))
     for seg in clusters:
         print(seg)
         print("--------------")
+    #
+    # print("TESTINg")
+
+    # print(tabulate_text(example,example,3,spacy_embedding))
     # clusA = "The Lok Sabha is elected for a term of five years. Its life can be extended for one year at a time during a national emergency. It can be dissolved earlier than its term by the President on the advice of the Prime Minister."
     # clusB1 = "In other words, it is an area or locality with a certain number of people who choose a person to represent them in the Lok Sabha. Each State and Union Territory is divided into territorial constituencies. The division is not based on area but on population. Let us consider Mizoram, Rajasthan and Uttar Pradesh."
     # clusB2 = "The total strength of the Rajya Sabha cannot be more than 250 of which 238 are elected while 12 arc nominated by the President of India. Election to the Rajya Sabha is done indirectly. The members of the state legislature elect the state representatives to the Rajya Sabha in accordance with the system of proportional representation by means of a single transferable vote. The seats in the Rajya Sabha for each state and Union Territory arc fixed on the basis of its population."

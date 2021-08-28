@@ -1,3 +1,6 @@
+import spacy
+from nltk import word_tokenize
+
 from final_files.extraction.extraction import process_text
 from final_files.simplification.muss_simp.muss_simplification import simplify_muss
 from final_files.summarisation.edmundsons.run_edmundsons import Edmundsons
@@ -9,6 +12,7 @@ from simplification.summariser import summarise_text
 from flask import Flask, jsonify, render_template
 
 from tables.tables import k_means_cluster
+from util import get_keywords
 
 app = Flask(__name__, template_folder='templates')
 
@@ -44,6 +48,20 @@ def world():
 
 #     return render_template('summarise.html', summary=summary)
 
+@app.route('/keywords/<text>', methods=['GET', 'POST'])
+def keywords(text):
+    keywords = get_keywords(text)
+
+    json_file = {}
+    json_file['keywords'] = keywords
+    return jsonify(json_file)
+
+
+nlp = spacy.load("en_core_web_sm")
+# Merge noun phrases and entities for easier analysis
+nlp.add_pipe("merge_entities")
+nlp.add_pipe("merge_noun_chunks")
+
 @app.route('/summarise/<text>/<percent>/<sum>/<simp>/<points>/<include_first_half>', methods=['GET', 'POST'])
 def summarise(text, percent, sum, simp, points, include_first_half):
     # ALL
@@ -55,6 +73,8 @@ def summarise(text, percent, sum, simp, points, include_first_half):
         temp = summariser.summarise()
 
     if simp == 'true':
+        print(temp)
+        print(type(temp))
         temp = simplify_muss(temp, 2)
         print("Siplified")
 
@@ -71,9 +91,14 @@ def summarise(text, percent, sum, simp, points, include_first_half):
 
     final = temp
 
+    keywords = get_keywords(final)
+
+    doc = nlp(final)
     print("FINAL: ", final)
     json_file = {}
-    json_file['summary'] = final
+    json_file['summary'] = [token.text for token in doc]
+    json_file['keywords'] = keywords
+    json_file['summary_original'] = final
     # getSummary(text)
     print(json_file)
     return jsonify(json_file)
@@ -87,16 +112,20 @@ def getSummaryTest(text):
     return "TEST: " + text
 
 
-@app.route('/keywords/<text>', methods=['GET', 'POST'])
-def keywords(text):
-    return None
+@app.route('/tokenize/<text>', methods=['GET', 'POST'])
+def words(text):
+    doc = nlp(text)
+    json_file = {}
+    json_file['words'] = [token.text for token in doc]
+
+    return jsonify(json_file)
     # return get_keywords(text)
 
 
 @app.route('/timeline/<text>/<percent>/<sum>/<simp>/<points>/<include_first_half>/<n>', methods=['GET', 'POST'])
 def timeline(text, n, percent, sum, simp, points, include_first_half):
     print("got text: ", text)
-    summarised = summarise(text, percent, sum, simp, points, include_first_half).get_json()['summary']
+    summarised = summarise(text, percent, sum, simp, points, include_first_half).get_json()['summary_original']
 
     clusters = get_clusters(summarised, int(n), spacy_embedding)
     json = identify_dates(clusters)
@@ -109,15 +138,19 @@ def timeline(text, n, percent, sum, simp, points, include_first_half):
            methods=['GET', 'POST'])
 def tabulate(text1, text2, percent, sum, simp, points, include_first_half, n):
     print("got text: ", text1, text2)
-    summarised1 = summarise(text1, percent, sum, simp, points, include_first_half).get_json()['summary']
-    summarised2 = summarise(text2, percent, sum, simp, points, include_first_half).get_json()['summary']
+    summarised1 = summarise(text1, percent, sum, simp, points, include_first_half).get_json()['summary_original']
+    summarised2 = summarise(text2, percent, sum, simp, points, include_first_half).get_json()['summary_original']
+    print("summarised")
     # tabulated = k_means_cluster(text1, text2)
     s1, s2, table = tabulate_text(summarised1, summarised2, int(n), spacy_embedding)
 
+    return table
+
+    # print("table not issue")
     # json = tabulated.to_json()
-    print("DONE!")
-    print(table.transpose().to_json())
-    return table.transpose().to_json()
+    # print("DONE!")
+    # print(table.transpose().to_json())
+    # return table.transpose().to_json()
     # print(json)
     # json_file = {}
     # json_file['summary'] = getSummary(text)

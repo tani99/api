@@ -2,18 +2,49 @@ from multiprocessing.dummy import freeze_support
 
 import pandas as pd
 import spacy
+
+
 from final_files.visualisation.embeddings import spacy_embedding
 from final_files.visualisation.weakest_link_method import tabulate_text, get_clusters
+from util import get_keywords
 
 nlp = spacy.load("en_core_web_sm")
 
 
+# def get_keywords(doc):
+#     keywords = []
+#     imp_ents = ["ORG", "DATE", "MONEY", "PERSON", "TIME",  "EVENT", "WORK_OF_ART", "PERCENT", "FAC", "NORP", "LAW"]
+#     for token in doc:
+#         if token.ent_type_ in imp_ents:
+#             keywords.append(token.text.lower())
+#     return keywords
+
+
 def identify_dates(segments):
+    nlp = spacy.load("en_core_web_sm")
+    # Merge noun phrases and entities for easier analysis
+    nlp.add_pipe("merge_entities")
+    nlp.add_pipe("merge_noun_chunks")
+
     date_map = pd.DataFrame(index=range(0, len(segments)), columns=["Date", "Event"])
 
+    date_json = {}
     for i, segment in enumerate(segments):
-        date_map.loc[i, "Event"] = segment.strip()
-        date_map.loc[i, "Date"] = ""
+        date_json[i] = {}
+        date_json[i]["Event"] = {}
+        date_json[i]["Date"] = {}
+
+
+        event = segment.strip()
+        doc = nlp(event)
+        date_json[i]["Event"]["text"] = event
+        date_json[i]["Event"]["words"] = [token.text for token in doc]
+        date_json[i]["Event"]["keywords"] = get_keywords(doc)
+
+        date_json[i]["Date"]["text"] = ""
+
+        # date_map.loc[i, "Event"] = segment.strip()
+        # date_map.loc[i, "Date"] = ""
 
         doc = nlp(segment)
         # document level
@@ -21,16 +52,23 @@ def identify_dates(segments):
         for e in doc.ents:
             if e.label_ == "DATE":
                 # print(e.text, e.start_char, e.end_char, e.label_)
-                curr_dates = date_map.loc[i, "Date"]
+                curr_dates = date_json[i]["Date"]["text"]
                 if curr_dates == "":
                     curr_dates += e.text
                 else:
                     curr_dates = curr_dates + ", " + e.text
 
-                date_map.loc[i, "Date"] = curr_dates
+                date_json[i]["Date"]["text"] = curr_dates
+                # date_map.loc[i, "Date"] = curr_dates
 
-        if date_map.loc[i, "Date"] == "":
-            date_map.loc[i, "Date"] = "No date identified"
+        if date_json[i]["Date"]["text"]  == "":
+            date_json[i]["Date"]["text"]  = "No date identified"
+
+        date_doc = nlp(date_json[i]["Date"]["text"])
+        date_json[i]["Date"]["words"] =   [token.text for token in date_doc]
+        date_json[i]["Date"]["keywords"] = get_keywords(date_doc)
+
+    return date_json
 
     date_map.to_csv("date_map.csv")
     print(date_map)
