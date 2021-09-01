@@ -8,7 +8,7 @@ import itertools
 import spacy
 from nltk import sent_tokenize
 
-# from app import get_keywords
+
 from final_files.simplification.muss_simp.muss_simplification import simplify_muss
 from final_files.summarisation.evaluate_edmundsons import rouge_score
 from final_files.util import sentence_tokenizer
@@ -16,12 +16,20 @@ from final_files.visualisation.embeddings import get_embeddings, spacy_embedding
 from final_files.visualisation.util import cosine_distance, get_cluster_similarity
 import pandas as pd
 
-from util import get_keywords
 
 nlp = spacy.load("en_core_web_sm")
 # Merge noun phrases and entities for easier analysis
 nlp.add_pipe("merge_entities")
 nlp.add_pipe("merge_noun_chunks")
+
+def get_keywords(text):
+    keywords = []
+    imp_ents = ["ORG", "DATE", "MONEY", "PERSON", "TIME",  "GPE", "EVENT", "WORK_OF_ART", "PERCENT", "FAC", "NORP", "LAW"]
+    doc = nlp(text)
+    for token in doc:
+        if token.ent_type_ in imp_ents:
+            keywords.append(token.text.lower())
+    return keywords
 
 def distance(sent1, sent2, embedding):
     emb1 = get_embeddings(sent1, embedding, None)
@@ -34,11 +42,11 @@ def within_seg_sim(tok, embedding):
     sim = 0
     for i, sent_seg_1 in enumerate(tok):
         sim += distance(tok[i], tok[min(i+1, len(tok)-1)], embedding)
-    print(sim)
+    # print(sim)
     return sim
 
 def weight(i, j):
-    print(i, ", ", j)
+    # print(i, ", ", j)
     mod = abs(i - j)
     if mod <= 2:
         print(1)
@@ -82,8 +90,8 @@ def segment_similarity(tok1, tok2, embedding):
                     sum_sentence_similarities += distance(sent_seg_1, sent_seg_2, embedding) * weight(i, j)
 
     measure = within_seg_sim(tok1, embedding) + within_seg_sim(tok2, embedding) - sum_sentence_similarities
-    # return measure
-    return sum_sentence_similarities / (len(tok1) * len(tok2))
+    return measure
+    # return sum_sentence_similarities / (len(tok1) * len(tok2))
 
 
 def segment_similarity_old(tok1, tok2, embedding):
@@ -126,10 +134,6 @@ def weakest_segments(segs, embedding, min_seg_size, max_seg_size, n, segments_so
         # print("Can't be broken down anymore")
         return None, None, None
 
-    last_index = len(tok) - 1
-
-    min_seg_similarity = sys.float_info.max
-    min_segments = None, None
 
     last_index = len(tok) - 1
 
@@ -279,12 +283,12 @@ def best_matches(cluster1, cluster2):
         matches_json[i]["Text1"]["text"] = text1
         doc1 = nlp(text1)
         matches_json[i]["Text1"]["words"] = [token.text for token in doc1]
-        matches_json[i]["Text1"]["keywords"] = get_keywords(doc1)
+        matches_json[i]["Text1"]["keywords"] = get_keywords(text1)
 
         matches_json[i]["Text2"]["text"] = text2
         doc2 = nlp(text2)
         matches_json[i]["Text2"]["words"] = [token.text for token in doc2]
-        matches_json[i]["Text2"]["keywords"] = get_keywords(doc2)
+        matches_json[i]["Text2"]["keywords"] = get_keywords(text2)
 
         # matches.loc[i, "Text1"] = {}
         # matches.loc[i, "Text1"]["text"] = text1
@@ -321,7 +325,7 @@ def tabulate_text(t1, t2, n, embedding):
 
 def evaluate(clusters_real, clusters_pred):
     scores = []
-    print("test: ", len(clusters_real), len(clusters_pred))
+    # print("test: ", len(clusters_real), len(clusters_pred))
     for i, real in enumerate(clusters_real):
         pred = clusters_pred[i]
         scores.append(rouge_score(real, pred)['rouge-1']['f'])
@@ -339,7 +343,29 @@ if __name__ == '__main__':
     # min_size, max_size = get_seg_constraints(example, 3, 2)
     # # print(weakest_segments(example, spacy_embedding, min_size, max_size))
     #
-    clusters = (get_clusters(example1, 3, spacy_embedding))
+
+    example_unseen = """"German armies marched into France in early June 1940. By June 14, 1940 Paris was in German hands without a fight or any resistance. The speed and force with which Germany conducted the war became known as ‘blitzkrieg’ or lightning war. It used armoured tanks, aerial bombardment, and infantry and with the speed of lightning. France,
+
+Poland, Belgium and Holland fell to blitzkrieg. German soldiers march near the Arc de Triomphe in Paris, June 14, 1940 Battle of Britain
+
+German attack on Britain began in August 1940. The German plan was to bomb Britain into surrendering. There was an intense carpet bombing of England, particularly London, so much so that the British Government evacuated people particularly children to the countryside. In the city, the underground railway network proved to be a very useful bomb shelter.
+
+USA had remained neutral during the war in Europe, but for national security reasons, they
+decided to give ‘logistic support’ to Britain and China. Japan resented this support to China and the only military force that they feared was the US Pacific fleet based at Pearl Harbour in Hawaii.
+
+On December 7, 1941, under the premiership of General Tojo, a surprise attack was launched on Pearl Habour destroying ships and airfields and killing over 3700 people. In retaliation, on December 8, 1941, USA joined the war.
+
+USA brought with it fresh forces and ammunition giving the allies great impetus. In fact, it can be considered the turning point of the war.
+
+On June 6, 1944, the Allied troops launched the biggest air and sea operation. This invasion of occupied France from the coast turned the tide of the war. After the invasion of the coast of France, with their troops in Europe, the allies were able to march through Europe liberating each city and town along the way.
+
+‘The battle to capture Berlin, the nerve centre of Hitler’s German empire, began on April 19, 1945. Berlin was caught between Britain, France and America on one side and Russia on the other. On April 30, 1945 while a battle raged on the ground, Hitler in his underground bunker acknowledged defeat and shot himself. By May 8, 1945, Field Marshal Keitel surrendered on behalf of Germany.
+
+On August 6, 1945 the first atomic bomb was dropped on Hiroshima and the next on Nagasaki on August 9, 1945. On September 2, 1945 Japan surrendered unconditionally bringing this horrific war to an end.
+
+‘The two Japanese cities—Hiroshima and Nagasaki were completely destroyed. It not only killed over 1, 200,000 people but caused diseases like cancer, sterility and blindness. The cities continued to suffer under the effect of sterilisation."
+"""
+    clusters = (get_clusters(example_unseen.replace("\n", " "), 5, spacy_embedding))
     for seg in clusters:
         print(seg)
         print("--------------")

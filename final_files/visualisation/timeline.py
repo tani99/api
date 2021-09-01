@@ -6,11 +6,19 @@ import spacy
 
 from final_files.visualisation.embeddings import spacy_embedding
 from final_files.visualisation.weakest_link_method import tabulate_text, get_clusters
-from util import get_keywords
+# from util import get_keywords
 
 nlp = spacy.load("en_core_web_sm")
 
 
+def get_keywords(text):
+    keywords = []
+    imp_ents = ["ORG", "DATE", "MONEY", "PERSON", "TIME",  "GPE", "EVENT", "WORK_OF_ART", "PERCENT", "FAC", "NORP", "LAW"]
+    doc = nlp(text)
+    for token in doc:
+        if token.ent_type_ in imp_ents:
+            keywords.append(token.text.lower())
+    return keywords
 # def get_keywords(doc):
 #     keywords = []
 #     imp_ents = ["ORG", "DATE", "MONEY", "PERSON", "TIME",  "EVENT", "WORK_OF_ART", "PERCENT", "FAC", "NORP", "LAW"]
@@ -39,7 +47,7 @@ def identify_dates(segments):
         doc = nlp(event)
         date_json[i]["Event"]["text"] = event
         date_json[i]["Event"]["words"] = [token.text for token in doc]
-        date_json[i]["Event"]["keywords"] = get_keywords(doc)
+        date_json[i]["Event"]["keywords"] = get_keywords(event)
 
         date_json[i]["Date"]["text"] = ""
 
@@ -66,8 +74,13 @@ def identify_dates(segments):
 
         date_doc = nlp(date_json[i]["Date"]["text"])
         date_json[i]["Date"]["words"] =   [token.text for token in date_doc]
-        date_json[i]["Date"]["keywords"] = get_keywords(date_doc)
+        date_json[i]["Date"]["keywords"] = get_keywords(date_json[i]["Date"]["text"])
 
+
+
+    dataframe = pd.json_normalize(date_json)
+    dataframe.to_csv("report_example-2.csv")
+    print(date_json)
     return date_json
 
     date_map.to_csv("date_map.csv")
@@ -125,9 +138,11 @@ if __name__ == '__main__':
     numbers of missing soldiers. The precise numbers remain shrouded in the passage of time
     compounded by the incompleteness of available records."""
 
-    clusters = get_clusters(example.replace("\n", "").replace("  ", " "), 3, spacy_embedding)
 
-    print(clusters)
+    # print(example.replace("\n", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " "))
+    clusters = get_clusters(example.replace("\n", "").replace("  ", " "), 3, spacy_embedding)
+    #
+    # print(clusters)
     identify_dates(clusters)
     # Example 1
     # t1_org = dataframe['original'][0]
